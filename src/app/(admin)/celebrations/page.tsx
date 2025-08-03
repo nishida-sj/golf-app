@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { 
-  Gift, Calendar, Users, CheckCircle, Clock, 
+  Gift, Calendar, CheckCircle, Clock, 
   Plus, Edit2, Trash2, PartyPopper, Star 
 } from 'lucide-react';
 
@@ -63,7 +63,8 @@ export default function CelebrationsPage() {
   });
 
   const form = useForm<CelebrationFormData>({
-    resolver: zodResolver(celebrationFormSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(celebrationFormSchema) as any,
     defaultValues: {
       member_id: '',
       age: 60,
@@ -304,7 +305,7 @@ export default function CelebrationsPage() {
   // Toggle completion status
   const toggleCompletion = async (celebrationId: string, currentStatus: boolean) => {
     try {
-      const updateData: any = { is_completed: !currentStatus };
+      const updateData: { is_completed: boolean; completion_date?: string } = { is_completed: !currentStatus };
       
       if (!currentStatus) {
         // Mark as completed - set completion date to today

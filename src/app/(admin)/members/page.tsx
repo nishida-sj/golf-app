@@ -337,7 +337,7 @@ export default function MembersPage() {
                       <Select
                         value={editForm.member_type || member.member_type}
                         onValueChange={(value) =>
-                          setEditForm({ ...editForm, member_type: value as any })
+                          setEditForm({ ...editForm, member_type: value as '会員' | '旧会員' | '配偶者' | 'ゲスト' })
                         }
                       >
                         <SelectTrigger className="w-32">

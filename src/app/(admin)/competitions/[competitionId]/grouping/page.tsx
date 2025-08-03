@@ -105,12 +105,17 @@ export default function CompetitionGroupingPage() {
       // Transform the data structure
       const groupsWithMembers: GroupWithMembers[] = (groupsData || []).map(group => ({
         ...group,
-        members: group.group_members.map((gm: any) => ({
+        members: group.group_members.map((gm: {
+          id: string;
+          member_id: string;
+          position: number;
+          members: { id: string; name: string; member_type: string; };
+        }) => ({
           id: gm.id,
           member_id: gm.member_id,
           position: gm.position,
           member: gm.members,
-        })).sort((a: any, b: any) => a.position - b.position),
+        })).sort((a: { position: number }, b: { position: number }) => a.position - b.position),
       }));
 
       setGroups(groupsWithMembers);
@@ -332,7 +337,7 @@ export default function CompetitionGroupingPage() {
       }
 
       // Shuffle members
-      const shuffledMembers = [...participatingMembers].sort(() => Math.random() - 0.5);
+      const shuffledMembers = [...participatingMembers].sort(() => (Math.random() - 0.5) as number);
       
       // Create groups of 4
       const groupsToCreate = [];

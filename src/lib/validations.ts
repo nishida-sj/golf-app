@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MemberType } from "@/types/common";
+import { CelebrationAge } from "@/types/celebration";
 
 // Year form validation
 export const yearFormSchema = z.object({
@@ -93,7 +94,7 @@ export const transactionFormSchema = z.object({
 // Celebration form validation
 export const celebrationFormSchema = z.object({
   member_id: z.string().min(1, "会員を選択してください"),
-  age: z.number().refine((val) => [60, 70, 77, 80].includes(val), {
+  age: z.number().refine((val): val is CelebrationAge => [60, 70, 77, 80].includes(val as CelebrationAge), {
     message: "年齢は60、70、77、80のいずれかを選択してください",
   }),
   year_id: z.string().min(1, "年度を選択してください"),
