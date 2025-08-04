@@ -2,13 +2,14 @@
   "name": "golf-app",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "build:static": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "serve": "npx serve out"
+    "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -40,10 +41,5 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
     "typescript": "^5"
-  },
-  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
-  "main": "index.js",
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  }
 }

@@ -1,5 +1,9 @@
-# Vercel ignore file
-.env.local
-.env
-node_modules
-.next
+# Vercel ignore patterns
+.env*
+.next/
+node_modules/
+*.log
+
+# Avoid any legacy config
+now.json
+vercel.json
