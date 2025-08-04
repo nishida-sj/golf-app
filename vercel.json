@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "functions": {
+    "src/app/**/*.tsx": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
+      ]
+    }
+  ]
+}

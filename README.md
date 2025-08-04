@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ゴルフ会管理システム
 
-## Getting Started
+Next.js 15とSupabaseを使用したゴルフ会の総合管理システムです。
 
-First, run the development server:
+## 機能
+
+- 年度管理
+- 会員管理（年齢計算、会員区分）
+- 会費管理（設定・支払い管理）
+- コンペ管理（作成・組み合わせ表・出欠管理）
+- 財務管理（収支管理）
+- お祝い管理（還暦・古希・喜寿・傘寿）
+
+## セットアップ
+
+### 1. 環境変数の設定
+
+`.env.local`ファイルを作成し、以下の環境変数を設定してください：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Supabaseデータベースの設定
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Supabase SQL Editorで`supabase-setup.sql`を実行してください。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. 開発サーバーの起動
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 4. Vercelデプロイ時の環境変数設定
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Vercelダッシュボードで以下の環境変数を設定してください：
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. `NEXT_PUBLIC_SUPABASE_URL`
+2. `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. `SUPABASE_SERVICE_ROLE_KEY`
 
-## Deploy on Vercel
+## 技術スタック
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Shadcn/ui
+- **Database**: Supabase (PostgreSQL)
+- **Forms**: React Hook Form + Zod
+- **Date Handling**: date-fns
+- **Deployment**: Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 問題解決
+
+### Vercelデプロイで404エラーが発生する場合
+
+1. **環境変数の確認**: Vercelダッシュボードで環境変数が正しく設定されているか確認
+2. **Framework Preset**: VercelのProject SettingsでFramework PresetがNext.jsに設定されているか確認
+3. **Supabaseデータベース**: supabase-setup.sqlが実行されているか確認
+4. **ビルドログ**: Vercelのデプロイメントログでエラーがないか確認
