@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -75,7 +75,7 @@ export default function FeesPage() {
   });
 
   // Fetch initial data
-  const fetchYears = async () => {
+  const fetchYears = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from(DB_TABLES.YEARS)
@@ -95,9 +95,9 @@ export default function FeesPage() {
     } catch (error) {
       console.error('Error fetching years:', error);
     }
-  };
+  }, []);
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from(DB_TABLES.MEMBERS)
@@ -110,7 +110,7 @@ export default function FeesPage() {
     } catch (error) {
       console.error('Error fetching members:', error);
     }
-  };
+  }, []);
 
   const fetchFeeSettings = async (yearId: string) => {
     if (!yearId) return;

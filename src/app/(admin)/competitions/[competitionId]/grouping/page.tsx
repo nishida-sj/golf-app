@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -58,7 +58,7 @@ export default function CompetitionGroupingPage() {
   });
 
   // Fetch competition details
-  const fetchCompetition = async () => {
+  const fetchCompetition = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from(DB_TABLES.COMPETITIONS)
@@ -72,10 +72,10 @@ export default function CompetitionGroupingPage() {
       console.error('Error fetching competition:', error);
       router.push('/competitions');
     }
-  };
+  }, [competitionId, router]);
 
   // Fetch groups for this competition
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     try {
       const { data: groupsData, error: groupsError } = await supabase
         .from(DB_TABLES.COMPETITION_GROUPS)
@@ -113,10 +113,10 @@ export default function CompetitionGroupingPage() {
     } catch (error) {
       console.error('Error fetching groups:', error);
     }
-  };
+  }, [competitionId]);
 
   // Fetch available members (with attendance info)
-  const fetchAvailableMembers = async () => {
+  const fetchAvailableMembers = useCallback(async () => {
     try {
       // Get all active members
       const { data: membersData, error: membersError } = await supabase
@@ -156,7 +156,7 @@ export default function CompetitionGroupingPage() {
     } catch (error) {
       console.error('Error fetching available members:', error);
     }
-  };
+  }, [competitionId, groups]);
 
   useEffect(() => {
     if (competitionId) {

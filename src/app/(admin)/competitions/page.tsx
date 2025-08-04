@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -75,7 +75,7 @@ export default function CompetitionsPage() {
   const watchHasCelebration = form.watch('has_celebration');
 
   // Fetch years from Supabase
-  const fetchYears = async () => {
+  const fetchYears = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from(DB_TABLES.YEARS)
@@ -94,7 +94,7 @@ export default function CompetitionsPage() {
     } catch (error) {
       console.error('Error fetching years:', error);
     }
-  };
+  }, []);
 
   // Fetch competitions for selected year
   const fetchCompetitions = async (yearId: string) => {

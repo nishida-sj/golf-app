@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -77,7 +77,7 @@ export default function FinancesPage() {
   const watchType = form.watch('type');
 
   // Fetch years
-  const fetchYears = async () => {
+  const fetchYears = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from(DB_TABLES.YEARS)
@@ -96,7 +96,7 @@ export default function FinancesPage() {
     } catch (error) {
       console.error('Error fetching years:', error);
     }
-  };
+  }, []);
 
   // Fetch transactions for selected year
   const fetchTransactions = async (yearId: string) => {
@@ -135,7 +135,7 @@ export default function FinancesPage() {
   };
 
   // Calculate financial summary
-  const calculateSummary = async (yearId: string, transactionList: Transaction[]) => {
+  const calculateSummary = useCallback(async (yearId: string, transactionList: Transaction[]) => {
     const feeIncome = await fetchFeeIncome(yearId);
     
     const income = transactionList
@@ -167,7 +167,7 @@ export default function FinancesPage() {
       regularExpense,
       reimbursementExpense,
     });
-  };
+  }, []);
 
   useEffect(() => {
     const initializeData = async () => {

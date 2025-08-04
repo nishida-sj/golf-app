@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -78,7 +78,7 @@ export default function CelebrationsPage() {
   const watchIsCompleted = form.watch('is_completed');
 
   // Fetch years
-  const fetchYears = async () => {
+  const fetchYears = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from(DB_TABLES.YEARS)
@@ -97,10 +97,10 @@ export default function CelebrationsPage() {
     } catch (error) {
       console.error('Error fetching years:', error);
     }
-  };
+  }, []);
 
   // Fetch members
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from(DB_TABLES.MEMBERS)
@@ -113,7 +113,7 @@ export default function CelebrationsPage() {
     } catch (error) {
       console.error('Error fetching members:', error);
     }
-  };
+  }, []);
 
   // Fetch celebrations for selected year
   const fetchCelebrations = async (yearId: string) => {
@@ -166,7 +166,7 @@ export default function CelebrationsPage() {
   };
 
   // Calculate summary
-  const calculateSummary = () => {
+  const calculateSummary = useCallback(() => {
     const currentYear = new Date().getFullYear();
     const thisYearCelebrations = celebrations.filter(c => {
       const member = members.find(m => m.id === c.member_id);
@@ -192,7 +192,7 @@ export default function CelebrationsPage() {
       pending_this_year: pendingThisYear,
       upcoming_celebrations: upcomingCount,
     });
-  };
+  }, [members, celebrations]);
 
   useEffect(() => {
     const initializeData = async () => {
