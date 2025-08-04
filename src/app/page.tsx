@@ -65,6 +65,11 @@ export default function Home() {
                 管理画面へ
               </Button>
             </Link>
+            <Link href="/simple">
+              <Button size="lg" variant="outline">
+                テストページ
+              </Button>
+            </Link>
           </div>
           <p className="text-sm text-gray-500">
             管理機能：年度管理・会員管理・コンペ管理・財務管理・お祝い管理
