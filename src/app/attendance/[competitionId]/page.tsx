@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -70,7 +70,7 @@ export default function AttendancePage() {
   });
 
   // Fetch competition and attendance data
-  const fetchCompetitionData = async () => {
+  const fetchCompetitionData = useCallback(async () => {
     try {
       // Get competition details
       const { data: competitionData, error: competitionError } = await supabase
@@ -127,13 +127,13 @@ export default function AttendancePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [competitionId]);
 
   useEffect(() => {
     if (competitionId) {
       fetchCompetitionData();
     }
-  }, [competitionId]);
+  }, [competitionId, fetchCompetitionData]);
 
   // Handle member selection
   const handleMemberSelect = (memberId: string) => {
@@ -333,7 +333,7 @@ export default function AttendancePage() {
                   <FormField
                     control={form.control}
                     name="member_id"
-                    render={({ field }) => (
+                    render={() => (
                       <FormItem>
                         <FormLabel>お名前</FormLabel>
                         <Select onValueChange={handleMemberSelect} value={selectedMember}>

@@ -9,7 +9,6 @@ import { Edit2, Check, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
   Table,
@@ -30,7 +29,8 @@ import {
 
 import { supabase, DB_TABLES } from '@/lib/supabase';
 import { yearFormSchema } from '@/lib/validations';
-import { Year, YearFormData } from '@/types/database';
+import { Year } from '@/types/database';
+import { YearFormData } from '@/types/common';
 
 export default function YearsPage() {
   const [years, setYears] = useState<Year[]>([]);
@@ -39,7 +39,8 @@ export default function YearsPage() {
   const [editForm, setEditForm] = useState<Partial<Year>>({});
 
   const form = useForm<YearFormData>({
-    resolver: zodResolver(yearFormSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(yearFormSchema) as any,
     defaultValues: {
       name: '',
       start_date: '',

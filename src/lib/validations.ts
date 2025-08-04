@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { MemberType } from "@/types/common";
 import { CelebrationAge } from "@/types/celebration";
 
 // Year form validation
@@ -14,8 +13,8 @@ export const yearFormSchema = z.object({
 export const memberFormSchema = z.object({
   name: z.string().min(1, "氏名は必須です").max(100, "氏名は100文字以内で入力してください"),
   birth_date: z.string().min(1, "生年月日は必須です"),
-  member_type: z.enum(['会員', '旧会員', '配偶者', 'ゲスト'] as const, {
-    required_error: "会員区分を選択してください",
+  member_type: z.enum(['会員', '旧会員', '配偶者', 'ゲスト'], {
+    message: "会員区分を選択してください",
   }),
   is_active: z.boolean().default(true),
 });
@@ -23,8 +22,8 @@ export const memberFormSchema = z.object({
 // Fee setting form validation
 export const feeSettingFormSchema = z.object({
   year_id: z.string().min(1, "年度を選択してください"),
-  member_type: z.enum(['会員', '旧会員', '配偶者', 'ゲスト'] as const, {
-    required_error: "会員区分を選択してください",
+  member_type: z.enum(['会員', '旧会員', '配偶者', 'ゲスト'], {
+    message: "会員区分を選択してください",
   }),
   amount: z.number().min(0, "金額は0以上で入力してください"),
 });
@@ -82,8 +81,8 @@ export const attendanceFormSchema = z.object({
 // Transaction form validation
 export const transactionFormSchema = z.object({
   year_id: z.string().min(1, "年度を選択してください"),
-  type: z.enum(['income', 'expense'] as const, {
-    required_error: "取引種別を選択してください",
+  type: z.enum(['income', 'expense'], {
+    message: "取引種別を選択してください",
   }),
   amount: z.number().min(1, "金額は1円以上で入力してください").max(10000000, "金額は1000万円以下で入力してください"),
   description: z.string().min(1, "内容は必須です").max(200, "内容は200文字以内で入力してください"),

@@ -52,7 +52,8 @@ export default function CompetitionsPage() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   const form = useForm<CompetitionFormData>({
-    resolver: zodResolver(competitionFormSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(competitionFormSchema) as any,
     defaultValues: {
       year_id: '',
       name: '',

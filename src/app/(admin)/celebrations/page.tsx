@@ -312,7 +312,7 @@ export default function CelebrationsPage() {
         updateData.completion_date = format(new Date(), 'yyyy-MM-dd');
       } else {
         // Mark as not completed - remove completion date
-        updateData.completion_date = null;
+        updateData.completion_date = undefined;
       }
 
       const { error } = await supabase

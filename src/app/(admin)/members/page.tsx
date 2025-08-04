@@ -36,8 +36,8 @@ import {
 
 import { supabase, DB_TABLES } from '@/lib/supabase';
 import { memberFormSchema, calculateAge } from '@/lib/validations';
-import { Member, MemberFormData } from '@/types/common';
-import { MemberWithAge } from '@/types/database';
+import { MemberFormData } from '@/types/common';
+import { Member, MemberWithAge } from '@/types/database';
 
 const MEMBER_TYPES = ['会員', '旧会員', '配偶者', 'ゲスト'] as const;
 
@@ -48,7 +48,8 @@ export default function MembersPage() {
   const [editForm, setEditForm] = useState<Partial<Member>>({});
 
   const form = useForm<MemberFormData>({
-    resolver: zodResolver(memberFormSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(memberFormSchema) as any,
     defaultValues: {
       name: '',
       birth_date: '',

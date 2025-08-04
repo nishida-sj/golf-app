@@ -62,7 +62,8 @@ export default function FinancesPage() {
   });
 
   const form = useForm<TransactionFormData>({
-    resolver: zodResolver(transactionFormSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(transactionFormSchema) as any,
     defaultValues: {
       year_id: '',
       type: 'expense',
