@@ -201,7 +201,7 @@ export default function CelebrationsPage() {
       setLoading(false);
     };
     initializeData();
-  }, []);
+  }, [fetchYears, fetchMembers]);
 
   useEffect(() => {
     if (selectedYearId) {
@@ -213,7 +213,7 @@ export default function CelebrationsPage() {
     if (members.length > 0) {
       calculateSummary();
     }
-  }, [members, celebrations]);
+  }, [members, celebrations, calculateSummary]);
 
   // Handle year change
   const handleYearChange = (yearId: string) => {

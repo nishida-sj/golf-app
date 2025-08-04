@@ -13,7 +13,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -21,14 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Form,
   FormControl,
@@ -177,11 +168,11 @@ export default function CompetitionGroupingPage() {
       };
       initializeData();
     }
-  }, [competitionId]);
+  }, [competitionId, fetchCompetition, fetchGroups]);
 
   useEffect(() => {
     fetchAvailableMembers();
-  }, [groups]);
+  }, [groups, fetchAvailableMembers]);
 
   // Get next group number
   const getNextGroupNumber = () => {

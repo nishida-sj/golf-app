@@ -35,7 +35,7 @@ import {
 
 import { supabase, DB_TABLES } from '@/lib/supabase';
 import { feeSettingFormSchema, feePaymentFormSchema } from '@/lib/validations';
-import { Year, Member, FeeSetting, FeePayment, MemberWithPaymentStatus } from '@/types/database';
+import { Year, Member, FeeSetting, MemberWithPaymentStatus } from '@/types/database';
 import { MemberType, FeeSettingFormData, FeePaymentFormData } from '@/types/common';
 
 const MEMBER_TYPES: MemberType[] = ['会員', '旧会員', '配偶者', 'ゲスト'];
@@ -192,7 +192,7 @@ export default function FeesPage() {
       setLoading(false);
     };
     initializeData();
-  }, []);
+  }, [fetchYears, fetchMembers]);
 
   useEffect(() => {
     if (selectedYearId) {

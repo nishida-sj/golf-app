@@ -176,7 +176,7 @@ export default function FinancesPage() {
       setLoading(false);
     };
     initializeData();
-  }, []);
+  }, [fetchYears]);
 
   useEffect(() => {
     if (selectedYearId) {
@@ -188,7 +188,7 @@ export default function FinancesPage() {
     if (selectedYearId && transactions) {
       calculateSummary(selectedYearId, transactions);
     }
-  }, [selectedYearId, transactions]);
+  }, [selectedYearId, transactions, calculateSummary]);
 
   // Handle year change
   const handleYearChange = (yearId: string) => {

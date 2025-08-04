@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { Trophy, Calendar, MapPin, Clock, Edit2, Trash2, Plus, Users, ExternalLink, Copy, UsersRound } from 'lucide-react';
+import { Trophy, Calendar, MapPin, Clock, Edit2, Trash2, Plus, ExternalLink, Copy, UsersRound } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -121,7 +121,7 @@ export default function CompetitionsPage() {
       setLoading(false);
     };
     initializeData();
-  }, []);
+  }, [fetchYears]);
 
   useEffect(() => {
     if (selectedYearId) {

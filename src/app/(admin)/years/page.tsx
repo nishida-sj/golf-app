@@ -68,7 +68,7 @@ export default function YearsPage() {
 
   useEffect(() => {
     fetchYears();
-  }, []);
+  }, [fetchYears]);
 
   // Create new year
   const onSubmit = async (data: YearFormData) => {
