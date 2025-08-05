@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { 
   Users, Clock, ArrowLeft, Plus, Edit2, Trash2, 
-  CheckCircle, XCircle, AlertCircle, Shuffle 
+  CheckCircle, XCircle, AlertCircle, Shuffle, ArrowUpDown
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/form';
 
 import { supabase, DB_TABLES } from '@/lib/supabase';
-import { groupFormSchema } from '@/lib/validations';
+import { groupFormSchema, calculateAge } from '@/lib/validations';
 import { Competition } from '@/types/competition';
 import { GroupWithMembers, GroupFormData, MemberWithAttendance } from '@/types/grouping';
 
@@ -147,6 +147,7 @@ export default function CompetitionGroupingPage() {
           id: member.id,
           name: member.name,
           member_type: member.member_type,
+          birth_date: member.birth_date,
           attendance_status: attendance?.golf_attendance,
           is_assigned: assignedMemberIds.has(member.id),
         };
@@ -327,13 +328,17 @@ export default function CompetitionGroupingPage() {
         return;
       }
 
-      // Shuffle members
-      const shuffledMembers = [...participatingMembers].sort(() => (Math.random() - 0.5) as number);
+      // Sort members by age descending (oldest first)
+      const sortedMembers = [...participatingMembers].sort((a, b) => {
+        const ageA = calculateAge(a.birth_date);
+        const ageB = calculateAge(b.birth_date);
+        return ageB - ageA; // Descending order
+      });
       
       // Create groups of 4
       const groupsToCreate = [];
-      for (let i = 0; i < shuffledMembers.length; i += 4) {
-        const groupMembers = shuffledMembers.slice(i, i + 4);
+      for (let i = 0; i < sortedMembers.length; i += 4) {
+        const groupMembers = sortedMembers.slice(i, i + 4);
         groupsToCreate.push(groupMembers);
       }
 
@@ -394,6 +399,50 @@ export default function CompetitionGroupingPage() {
       case '配偶者': return 'bg-blue-100 text-blue-800';
       case 'ゲスト': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Sort group members by age descending
+  const sortGroupByAge = async (groupId: string) => {
+    try {
+      const group = groups.find(g => g.id === groupId);
+      if (!group) return;
+
+      // Get member details with birth dates
+      const memberIds = group.members.map(m => m.member_id);
+      const membersWithBirthDate = availableMembers.filter(m => memberIds.includes(m.id));
+      
+      // Sort by age descending
+      const sortedMembers = membersWithBirthDate.sort((a, b) => {
+        const ageA = calculateAge(a.birth_date);
+        const ageB = calculateAge(b.birth_date);
+        return ageB - ageA; // Descending order
+      });
+
+      // Delete existing group members
+      const { error: deleteError } = await supabase
+        .from(DB_TABLES.GROUP_MEMBERS)
+        .delete()
+        .eq('group_id', groupId);
+
+      if (deleteError) throw deleteError;
+
+      // Insert sorted members
+      const memberInserts = sortedMembers.map((member, index) => ({
+        group_id: groupId,
+        member_id: member.id,
+        position: index + 1,
+      }));
+
+      const { error: insertError } = await supabase
+        .from(DB_TABLES.GROUP_MEMBERS)
+        .insert(memberInserts);
+
+      if (insertError) throw insertError;
+
+      await fetchGroups();
+    } catch (error) {
+      console.error('Error sorting group by age:', error);
     }
   };
 
@@ -620,6 +669,14 @@ export default function CompetitionGroupingPage() {
                     )}
                   </div>
                   <div className="flex items-center space-x-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => sortGroupByAge(group.id)}
+                      title="年齢降順で並び替え"
+                    >
+                      <ArrowUpDown className="h-4 w-4" />
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => startEdit(group)}>
                       <Edit2 className="h-4 w-4" />
                     </Button>
@@ -640,6 +697,9 @@ export default function CompetitionGroupingPage() {
                             <div className="flex items-center gap-2">
                               {getAttendanceIcon(memberData.attendance_status)}
                               <span className="font-medium">{memberData.name}</span>
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {calculateAge(memberData.birth_date)}歳
                             </div>
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getBadgeColor(memberData.member_type)}`}>
                               {memberData.member_type}

@@ -144,7 +144,7 @@ export default function CelebrationsPage() {
       const celebrationInfo = getCelebrationInfo(member.birth_date, currentYear);
       
       for (const celebration of celebrationInfo.upcoming_celebrations) {
-        if (celebration.is_this_year || celebration.is_past_due) {
+        if (celebration.is_this_year || celebration.is_past_due || (celebration.is_upcoming && celebration.year_turning <= currentYear + 1)) {
           // Check if already recorded
           const existing = celebrations.find(c => 
             c.member_id === member.id && c.age === celebration.age
@@ -156,6 +156,8 @@ export default function CelebrationsPage() {
               age: celebration.age,
               year_turning: celebration.year_turning,
               is_past_due: celebration.is_past_due,
+              is_this_year: celebration.is_this_year,
+              is_upcoming: celebration.is_upcoming,
             });
           }
         }
@@ -478,9 +480,11 @@ export default function CelebrationsPage() {
                           </div>
                         </div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          eligible.is_past_due ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'
+                          eligible.is_past_due ? 'bg-red-100 text-red-800' : 
+                          eligible.is_this_year ? 'bg-orange-100 text-orange-800' : 
+                          'bg-blue-100 text-blue-800'
                         }`}>
-                          {eligible.is_past_due ? '過去' : '今年'}
+                          {eligible.is_past_due ? '過去' : eligible.is_this_year ? '今年' : '来年'}
                         </span>
                       </div>
                     </div>

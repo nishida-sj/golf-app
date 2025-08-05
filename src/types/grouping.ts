@@ -43,6 +43,7 @@ export interface MemberWithAttendance {
   id: string;
   name: string;
   member_type: string;
+  birth_date: string;
   attendance_status?: '〇' | '×' | '△';
   is_assigned: boolean;
 }
