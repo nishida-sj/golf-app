@@ -59,7 +59,7 @@ export default function Home() {
         {/* Actions */}
         <div className="text-center space-y-4">
           <div className="space-x-4">
-            <Link href="/years">
+            <Link href="/admin">
               <Button size="lg" className="bg-green-600 hover:bg-green-700">
                 <Settings className="h-5 w-5 mr-2" />
                 管理画面へ
