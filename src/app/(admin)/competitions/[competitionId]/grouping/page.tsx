@@ -328,18 +328,20 @@ export default function CompetitionGroupingPage() {
         return;
       }
 
-      // Sort members by age descending (oldest first)
-      const sortedMembers = [...participatingMembers].sort((a, b) => {
-        const ageA = calculateAge(a.birth_date);
-        const ageB = calculateAge(b.birth_date);
-        return ageB - ageA; // Descending order
-      });
+      // Shuffle members randomly first
+      const shuffledMembers = [...participatingMembers].sort(() => Math.random() - 0.5);
       
       // Create groups of 4
       const groupsToCreate = [];
-      for (let i = 0; i < sortedMembers.length; i += 4) {
-        const groupMembers = sortedMembers.slice(i, i + 4);
-        groupsToCreate.push(groupMembers);
+      for (let i = 0; i < shuffledMembers.length; i += 4) {
+        const groupMembers = shuffledMembers.slice(i, i + 4);
+        // Sort each group by age descending (oldest first)
+        const sortedGroupMembers = groupMembers.sort((a, b) => {
+          const ageA = calculateAge(a.birth_date);
+          const ageB = calculateAge(b.birth_date);
+          return ageB - ageA; // Descending order
+        });
+        groupsToCreate.push(sortedGroupMembers);
       }
 
       // Create groups in database
