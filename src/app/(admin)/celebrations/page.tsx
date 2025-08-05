@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { 
   Gift, Calendar, CheckCircle, Clock, 
-  Plus, Edit2, Trash2, PartyPopper, Star 
+  Plus, Edit2, Trash2
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,7 +42,7 @@ import {
 import { supabase, DB_TABLES } from '@/lib/supabase';
 import { celebrationFormSchema, getCelebrationInfo, calculateAge } from '@/lib/validations';
 import { Year, Member } from '@/types/database';
-import { MemberCelebration, CelebrationFormData, CelebrationAge, CelebrationSummary } from '@/types/celebration';
+import { MemberCelebration, CelebrationFormData, CelebrationAge } from '@/types/celebration';
 
 const CELEBRATION_AGES: CelebrationAge[] = [60, 70, 77, 80];
 
@@ -54,13 +54,6 @@ export default function CelebrationsPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [summary, setSummary] = useState<CelebrationSummary>({
-    total_members: 0,
-    this_year_celebrations: 0,
-    completed_this_year: 0,
-    pending_this_year: 0,
-    upcoming_celebrations: 0,
-  });
 
   const form = useForm<CelebrationFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -99,13 +92,14 @@ export default function CelebrationsPage() {
     }
   }, []);
 
-  // Fetch members
+  // Fetch members (only 会員)
   const fetchMembers = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from(DB_TABLES.MEMBERS)
         .select('*')
         .eq('is_active', true)
+        .eq('member_type', '会員')
         .order('name');
 
       if (error) throw error;
@@ -126,7 +120,8 @@ export default function CelebrationsPage() {
           *,
           members!inner(name, birth_date, member_type)
         `)
-        .eq('year_id', yearId);
+        .eq('year_id', yearId)
+        .order('completion_date', { ascending: false, nullsLast: true });
 
       if (error) throw error;
       setCelebrations(data || []);
@@ -167,34 +162,6 @@ export default function CelebrationsPage() {
     return eligibleMembers;
   };
 
-  // Calculate summary
-  const calculateSummary = useCallback(() => {
-    const currentYear = new Date().getFullYear();
-    const thisYearCelebrations = celebrations.filter(c => {
-      const member = members.find(m => m.id === c.member_id);
-      if (!member) return false;
-      const birthYear = new Date(member.birth_date).getFullYear();
-      return (birthYear + c.age) === currentYear;
-    });
-
-    const completedThisYear = thisYearCelebrations.filter(c => c.is_completed).length;
-    const pendingThisYear = thisYearCelebrations.length - completedThisYear;
-    
-    // Count upcoming celebrations (next 5 years)
-    let upcomingCount = 0;
-    for (const member of members) {
-      const celebrationInfo = getCelebrationInfo(member.birth_date, currentYear);
-      upcomingCount += celebrationInfo.upcoming_celebrations.filter(c => c.is_upcoming).length;
-    }
-
-    setSummary({
-      total_members: members.length,
-      this_year_celebrations: thisYearCelebrations.length,
-      completed_this_year: completedThisYear,
-      pending_this_year: pendingThisYear,
-      upcoming_celebrations: upcomingCount,
-    });
-  }, [members, celebrations]);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -211,11 +178,6 @@ export default function CelebrationsPage() {
     }
   }, [selectedYearId]);
 
-  useEffect(() => {
-    if (members.length > 0) {
-      calculateSummary();
-    }
-  }, [members, celebrations, calculateSummary]);
 
   // Handle year change
   const handleYearChange = (yearId: string) => {
@@ -394,68 +356,6 @@ export default function CelebrationsPage() {
 
       {selectedYearId && (
         <>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">今年のお祝い</CardTitle>
-                <PartyPopper className="h-4 w-4 text-yellow-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">
-                  {summary.this_year_celebrations}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  名の会員が節目年齢
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">実施済み</CardTitle>
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {summary.completed_this_year}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  件のお祝いを実施済み
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">未実施</CardTitle>
-                <Clock className="h-4 w-4 text-orange-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-600">
-                  {summary.pending_this_year}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  件のお祝いが未実施
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">今後予定</CardTitle>
-                <Star className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
-                  {summary.upcoming_celebrations}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  件の今後のお祝い
-                </p>
-              </CardContent>
-            </Card>
-          </div>
 
           {/* Eligible Members Alert */}
           {eligibleMembers.length > 0 && (
