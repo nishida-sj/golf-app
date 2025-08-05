@@ -65,11 +65,6 @@ export default function Home() {
                 管理画面へ
               </Button>
             </Link>
-            <Link href="/simple">
-              <Button size="lg" variant="outline">
-                テストページ
-              </Button>
-            </Link>
           </div>
           <p className="text-sm text-gray-500">
             管理機能：年度管理・会員管理・コンペ管理・財務管理・お祝い管理
@@ -79,7 +74,7 @@ export default function Home() {
         {/* Footer */}
         <div className="text-center mt-20 pt-8 border-t border-gray-200">
           <p className="text-gray-500">
-            © 2024 ゴルフ会管理システム - Next.js & Supabase
+            © 2025 ゴルフ会管理システム - Next.js & Supabase by 西田商事株式会社
           </p>
         </div>
       </div>
