@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function StatusPage() {
   return (
     <html>
@@ -14,7 +16,7 @@ export default function StatusPage() {
           <li>Time: {new Date().toISOString()}</li>
         </ul>
         <div>
-          <a href="/">← Back to Home</a>
+          <Link href="/">← Back to Home</Link>
         </div>
       </body>
     </html>
