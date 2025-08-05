@@ -121,7 +121,7 @@ export default function CelebrationsPage() {
           members!inner(name, birth_date, member_type)
         `)
         .eq('year_id', yearId)
-        .order('completion_date', { ascending: false, nullsLast: true });
+        .order('completion_date', { ascending: false, nullsFirst: false });
 
       if (error) throw error;
       setCelebrations(data || []);
