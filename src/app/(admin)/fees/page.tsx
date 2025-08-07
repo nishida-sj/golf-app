@@ -313,11 +313,16 @@ export default function FeesPage() {
 
   // Calculate payment statistics
   const getPaymentStats = () => {
-    const paidMembers = memberPayments.filter(m => m.payment_status === 'paid');
-    const unpaidMembers = memberPayments.filter(m => m.payment_status === 'unpaid');
-    const totalMembers = memberPayments.length;
+    // Filter out guests and former members who don't need to pay fees
+    const feeRequiredMembers = memberPayments.filter(m => 
+      m.member_type !== 'ゲスト' && m.member_type !== '旧会員'
+    );
+    
+    const paidMembers = feeRequiredMembers.filter(m => m.payment_status === 'paid');
+    const unpaidMembers = feeRequiredMembers.filter(m => m.payment_status === 'unpaid');
+    const totalMembers = feeRequiredMembers.length;
     const paidAmount = paidMembers.reduce((sum, m) => sum + (m.fee_payment?.amount || 0), 0);
-    const expectedAmount = memberPayments.reduce((sum, m) => sum + (m.expected_amount || 0), 0);
+    const expectedAmount = feeRequiredMembers.reduce((sum, m) => sum + (m.expected_amount || 0), 0);
     const paymentRate = totalMembers > 0 ? (paidMembers.length / totalMembers) * 100 : 0;
     
     return {
@@ -326,8 +331,37 @@ export default function FeesPage() {
       totalCount: totalMembers,
       paidAmount,
       expectedAmount,
-      paymentRate
+      paymentRate,
+      paidMembers,
+      unpaidMembers
     };
+  };
+
+  // Get payment summary by date
+  const getPaymentsByDate = () => {
+    const feeRequiredMembers = memberPayments.filter(m => 
+      m.member_type !== 'ゲスト' && m.member_type !== '旧会員'
+    );
+    
+    const paidMembers = feeRequiredMembers.filter(m => m.payment_status === 'paid');
+    const paymentsByDate: { [key: string]: { amount: number; count: number; members: string[] } } = {};
+    
+    paidMembers.forEach(member => {
+      if (member.fee_payment) {
+        const date = member.fee_payment.payment_date;
+        if (!paymentsByDate[date]) {
+          paymentsByDate[date] = { amount: 0, count: 0, members: [] };
+        }
+        paymentsByDate[date].amount += member.fee_payment.amount;
+        paymentsByDate[date].count += 1;
+        paymentsByDate[date].members.push(member.name);
+      }
+    });
+    
+    // Convert to array and sort by date descending
+    return Object.entries(paymentsByDate)
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };
 
   if (loading) {
@@ -471,6 +505,197 @@ export default function FeesPage() {
                         <div className="text-sm text-gray-600">未収額</div>
                       </div>
                     </div>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+
+          {/* Detailed Payment Status Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Paid Members Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  支払済み会員一覧
+                </CardTitle>
+                <CardDescription>
+                  会費を支払った会員の詳細情報
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const { paidMembers } = getPaymentStats();
+                  return (
+                    <div className="space-y-3">
+                      {paidMembers.length > 0 ? (
+                        <>
+                          <div className="text-sm text-gray-600 mb-4">
+                            {paidMembers.length}名が支払い完了
+                          </div>
+                          <div className="max-h-64 overflow-y-auto space-y-2">
+                            {paidMembers.map((member) => (
+                              <div
+                                key={member.id}
+                                className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  <div>
+                                    <div className="font-medium text-green-900">{member.name}</div>
+                                    <div className="text-sm text-green-700">
+                                      {member.member_type} • {member.age}歳
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="font-semibold text-green-700">
+                                    ¥{member.fee_payment?.amount.toLocaleString()}
+                                  </div>
+                                  <div className="text-xs text-green-600">
+                                    {member.fee_payment && format(new Date(member.fee_payment.payment_date), 'MM/dd')}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          まだ支払いを行った会員がいません
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* Unpaid Members Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <XCircle className="h-5 w-5 text-red-600" />
+                  未払い会員一覧
+                </CardTitle>
+                <CardDescription>
+                  会費の支払いが必要な会員の詳細情報
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const { unpaidMembers } = getPaymentStats();
+                  return (
+                    <div className="space-y-3">
+                      {unpaidMembers.length > 0 ? (
+                        <>
+                          <div className="text-sm text-gray-600 mb-4">
+                            {unpaidMembers.length}名が支払い未完了
+                          </div>
+                          <div className="max-h-64 overflow-y-auto space-y-2">
+                            {unpaidMembers.map((member) => (
+                              <div
+                                key={member.id}
+                                className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                  <div>
+                                    <div className="font-medium text-red-900">{member.name}</div>
+                                    <div className="text-sm text-red-700">
+                                      {member.member_type} • {member.age}歳
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="font-semibold text-red-700">
+                                    ¥{member.expected_amount?.toLocaleString()}
+                                  </div>
+                                  <div className="text-xs text-red-600">予定額</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center py-8 text-green-500">
+                          全ての会員が支払い完了！
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Payment Summary by Date */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                支払日別集計
+              </CardTitle>
+              <CardDescription>
+                日付ごとの支払い実績と金額の集計
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const paymentsByDate = getPaymentsByDate();
+                return (
+                  <div className="space-y-4">
+                    {paymentsByDate.length > 0 ? (
+                      <div className="max-h-80 overflow-y-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>支払日</TableHead>
+                              <TableHead className="text-center">人数</TableHead>
+                              <TableHead className="text-right">金額</TableHead>
+                              <TableHead>支払者</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {paymentsByDate.map((payment) => (
+                              <TableRow key={payment.date}>
+                                <TableCell className="font-medium">
+                                  {format(new Date(payment.date), 'yyyy年MM月dd日')}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    {payment.count}名
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-right font-semibold">
+                                  ¥{payment.amount.toLocaleString()}
+                                </TableCell>
+                                <TableCell className="max-w-xs">
+                                  <div className="text-sm text-gray-600 truncate" title={payment.members.join(', ')}>
+                                    {payment.members.join(', ')}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                            <TableRow className="bg-gray-50 font-semibold">
+                              <TableCell>合計</TableCell>
+                              <TableCell className="text-center">
+                                {paymentsByDate.reduce((sum, p) => sum + p.count, 0)}名
+                              </TableCell>
+                              <TableCell className="text-right">
+                                ¥{paymentsByDate.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
+                              </TableCell>
+                              <TableCell>-</TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        まだ支払い実績がありません
+                      </div>
+                    )}
                   </div>
                 );
               })()}
@@ -704,46 +929,48 @@ export default function FeesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {memberPayments.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell className="font-medium">{member.name}</TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBadgeColor(member.member_type)}`}>
-                          {member.member_type}
-                        </span>
-                      </TableCell>
-                      <TableCell>¥{member.expected_amount?.toLocaleString() || 0}</TableCell>
-                      <TableCell>
-                        {member.fee_payment 
-                          ? `¥${member.fee_payment.amount.toLocaleString()}`
-                          : '-'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        {member.fee_payment 
-                          ? format(new Date(member.fee_payment.payment_date), 'yyyy-MM-dd')
-                          : '-'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        {member.payment_status === 'paid' ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            支払済
+                  {memberPayments
+                    .filter(m => m.member_type !== 'ゲスト' && m.member_type !== '旧会員')
+                    .map((member) => (
+                      <TableRow key={member.id}>
+                        <TableCell className="font-medium">{member.name}</TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBadgeColor(member.member_type)}`}>
+                            {member.member_type}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            未収
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell>¥{member.expected_amount?.toLocaleString() || 0}</TableCell>
+                        <TableCell>
+                          {member.fee_payment 
+                            ? `¥${member.fee_payment.amount.toLocaleString()}`
+                            : '-'
+                          }
+                        </TableCell>
+                        <TableCell>
+                          {member.fee_payment 
+                            ? format(new Date(member.fee_payment.payment_date), 'yyyy-MM-dd')
+                            : '-'
+                          }
+                        </TableCell>
+                        <TableCell>
+                          {member.payment_status === 'paid' ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              支払済
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              未収
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
 
-              {memberPayments.length === 0 && (
+              {memberPayments.filter(m => m.member_type !== 'ゲスト' && m.member_type !== '旧会員').length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  アクティブな会員がいません
+                  会費対象の会員がいません
                 </div>
               )}
             </CardContent>
