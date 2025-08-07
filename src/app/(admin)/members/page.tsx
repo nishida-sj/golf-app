@@ -226,26 +226,19 @@ export default function MembersPage() {
             print-color-adjust: exact !important;
           }
           
-          body * {
-            visibility: hidden;
-          }
-          
-          body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-          }
-          
-          .print-content, .print-content * {
-            visibility: visible !important;
+          .no-print {
+            display: none !important;
           }
           
           .print-content {
-            position: absolute;
-            left: 0;
-            top: 0;
+            display: block !important;
+            visibility: visible !important;
+            position: relative !important;
             width: 100% !important;
             height: auto !important;
             margin: 0 !important;
             padding: 0 !important;
+            font-family: 'Helvetica', 'Arial', sans-serif;
           }
           
           @page {
@@ -254,72 +247,79 @@ export default function MembersPage() {
           }
           
           .print-title {
-            font-size: 20px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 8px;
-            page-break-after: avoid;
+            font-size: 20px !important;
+            font-weight: bold !important;
+            text-align: center !important;
+            margin-bottom: 20px !important;
+            border-bottom: 2px solid #000 !important;
+            padding-bottom: 8px !important;
+            page-break-after: avoid !important;
+            color: #000 !important;
           }
           
           .print-section {
-            margin-bottom: 20px;
-            page-break-inside: avoid;
+            margin-bottom: 20px !important;
+            page-break-inside: avoid !important;
           }
           
           .print-section-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            background-color: #f0f0f0;
-            padding: 4px 8px;
-            page-break-after: avoid;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            margin-bottom: 10px !important;
+            background-color: #f0f0f0 !important;
+            padding: 4px 8px !important;
+            page-break-after: avoid !important;
+            color: #000 !important;
           }
           
           .print-members-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
-            column-gap: 20px;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 0 !important;
+            column-gap: 20px !important;
           }
           
           .print-member-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 3px 0;
-            border-bottom: 1px solid #ddd;
-            page-break-inside: avoid;
-            width: 100%;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 3px 0 !important;
+            border-bottom: 1px solid #ddd !important;
+            page-break-inside: avoid !important;
+            width: 100% !important;
+            color: #000 !important;
           }
           
           .print-member-name {
-            font-size: 14px;
-            font-weight: 400;
+            font-size: 14px !important;
+            font-weight: 400 !important;
+            color: #000 !important;
           }
           
           .print-checkbox {
-            width: 16px;
-            height: 16px;
-            border: 2px solid #000;
-            display: inline-block;
-            flex-shrink: 0;
+            width: 16px !important;
+            height: 16px !important;
+            border: 2px solid #000 !important;
+            display: inline-block !important;
+            flex-shrink: 0 !important;
+            background-color: #fff !important;
           }
           
           .print-summary {
-            margin-top: 15px;
-            padding: 10px;
-            border: 1px solid #000;
-            background-color: #f9f9f9;
-            font-size: 11px;
-            page-break-inside: avoid;
+            margin-top: 15px !important;
+            padding: 10px !important;
+            border: 1px solid #000 !important;
+            background-color: #f9f9f9 !important;
+            font-size: 11px !important;
+            page-break-inside: avoid !important;
+            color: #000 !important;
           }
           
           .print-summary-title {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-size: 12px !important;
+            font-weight: bold !important;
+            margin-bottom: 5px !important;
+            color: #000 !important;
           }
         }
       `}</style>
