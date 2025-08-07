@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { Edit2, Check, X, UserPlus, FileText, Printer } from 'lucide-react';
+import { Edit2, Check, X, UserPlus, FileText, ExternalLink } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,7 +50,6 @@ export default function MembersPage() {
   // Check report states
   const [reportTitle, setReportTitle] = useState('');
   const [selectedMemberTypes, setSelectedMemberTypes] = useState<string[]>(['会員']);
-  const [showPreview, setShowPreview] = useState(false);
 
   const form = useForm<MemberFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,7 +188,7 @@ export default function MembersPage() {
     ).sort((a, b) => a.name.localeCompare(b.name));
   };
 
-  // Generate and print report
+  // Generate and open report in new window
   const generateReport = () => {
     if (!reportTitle.trim()) {
       alert('帳票名を入力してください');
@@ -199,12 +198,160 @@ export default function MembersPage() {
       alert('対象会員区分を選択してください');
       return;
     }
-    setShowPreview(true);
-    setTimeout(() => {
-      window.print();
-      // Reset preview after printing
-      setTimeout(() => setShowPreview(false), 1000);
-    }, 100);
+    
+    const reportMembers = getReportMembers();
+    let globalIndex = 0;
+    
+    const reportHTML = `
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${reportTitle}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+        
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #000;
+        }
+        
+        .report-title {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+        }
+        
+        .report-section {
+            margin-bottom: 20px;
+        }
+        
+        .report-section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background-color: #f0f0f0;
+            padding: 4px 8px;
+        }
+        
+        .members-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            column-gap: 20px;
+        }
+        
+        .member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 0;
+            border-bottom: 1px solid #ddd;
+            width: 100%;
+        }
+        
+        .member-name {
+            font-size: 14px;
+            font-weight: 400;
+        }
+        
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #000;
+            display: inline-block;
+            background-color: #fff;
+        }
+        
+        .summary {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #000;
+            background-color: #f9f9f9;
+            font-size: 11px;
+        }
+        
+        .summary-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .age-info {
+            margin-left: 10px;
+            font-size: 10px;
+            color: #666;
+        }
+        
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-title">
+        ${reportTitle}
+    </div>
+    
+    ${selectedMemberTypes.map((memberType) => {
+      const typeMembers = reportMembers.filter(m => m.member_type === memberType);
+      if (typeMembers.length === 0) return '';
+      
+      return `
+    <div class="report-section">
+        ${selectedMemberTypes.length > 1 ? `
+        <div class="report-section-title">
+            ${memberType} (${typeMembers.length}名)
+        </div>` : ''}
+        
+        <div class="members-grid">
+            ${typeMembers.map((member) => {
+              globalIndex++;
+              return `
+            <div class="member-item">
+                <div class="member-info">
+                    <span class="member-name">
+                        ${globalIndex}. ${member.name}
+                    </span>
+                    ${selectedMemberTypes.length === 1 ? `
+                    <span class="age-info">
+                        (${member.age}歳)
+                    </span>` : ''}
+                </div>
+                <div class="checkbox"></div>
+            </div>`;
+            }).join('')}
+        </div>
+    </div>`;
+    }).join('')}
+    
+    <div class="summary">
+        <div class="summary-title">集計</div>
+        <div>対象会員区分: ${selectedMemberTypes.join(', ')}</div>
+        <div>総数: ${reportMembers.length}名</div>
+        <div>作成日: ${format(new Date(), 'yyyy年MM月dd日')}</div>
+    </div>
+</body>
+</html>`;
+
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(reportHTML);
+      newWindow.document.close();
+      newWindow.focus();
+    }
   };
 
   if (loading) {
@@ -216,115 +363,7 @@ export default function MembersPage() {
   }
 
   return (
-    <>
-      {/* Print Styles */}
-      <style jsx global>{`
-        @media print {
-          * {
-            -webkit-print-color-adjust: exact !important;
-            color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          
-          .no-print {
-            display: none !important;
-          }
-          
-          .print-content {
-            display: block !important;
-            visibility: visible !important;
-            position: relative !important;
-            width: 100% !important;
-            height: auto !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            font-family: 'Helvetica', 'Arial', sans-serif;
-          }
-          
-          @page {
-            size: A4;
-            margin: 15mm;
-          }
-          
-          .print-title {
-            font-size: 20px !important;
-            font-weight: bold !important;
-            text-align: center !important;
-            margin-bottom: 20px !important;
-            border-bottom: 2px solid #000 !important;
-            padding-bottom: 8px !important;
-            page-break-after: avoid !important;
-            color: #000 !important;
-          }
-          
-          .print-section {
-            margin-bottom: 20px !important;
-            page-break-inside: avoid !important;
-          }
-          
-          .print-section-title {
-            font-size: 16px !important;
-            font-weight: bold !important;
-            margin-bottom: 10px !important;
-            background-color: #f0f0f0 !important;
-            padding: 4px 8px !important;
-            page-break-after: avoid !important;
-            color: #000 !important;
-          }
-          
-          .print-members-grid {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            gap: 0 !important;
-            column-gap: 20px !important;
-          }
-          
-          .print-member-item {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            padding: 3px 0 !important;
-            border-bottom: 1px solid #ddd !important;
-            page-break-inside: avoid !important;
-            width: 100% !important;
-            color: #000 !important;
-          }
-          
-          .print-member-name {
-            font-size: 14px !important;
-            font-weight: 400 !important;
-            color: #000 !important;
-          }
-          
-          .print-checkbox {
-            width: 16px !important;
-            height: 16px !important;
-            border: 2px solid #000 !important;
-            display: inline-block !important;
-            flex-shrink: 0 !important;
-            background-color: #fff !important;
-          }
-          
-          .print-summary {
-            margin-top: 15px !important;
-            padding: 10px !important;
-            border: 1px solid #000 !important;
-            background-color: #f9f9f9 !important;
-            font-size: 11px !important;
-            page-break-inside: avoid !important;
-            color: #000 !important;
-          }
-          
-          .print-summary-title {
-            font-size: 12px !important;
-            font-weight: bold !important;
-            margin-bottom: 5px !important;
-            color: #000 !important;
-          }
-        }
-      `}</style>
-
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">会員管理</h1>
           <p className="mt-2 text-gray-600">会員情報の登録・編集・管理を行います</p>
@@ -425,14 +464,14 @@ export default function MembersPage() {
       </Card>
 
       {/* Check Report Form */}
-      <Card className="no-print">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            チェック帳票出力
+            チェック帳票作成
           </CardTitle>
           <CardDescription>
-            会員ごとにチェックボックス付きの帳票を作成します
+            会員ごとにチェックボックス付きの帳票を新しいタブで表示します
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -476,20 +515,24 @@ export default function MembersPage() {
             </div>
           </div>
 
-          {/* Preview and Export Button */}
+          {/* Generate Button */}
           <div className="flex items-center gap-4 pt-4">
             <Button
               onClick={generateReport}
               disabled={!reportTitle.trim() || selectedMemberTypes.length === 0}
               className="flex items-center gap-2"
             >
-              <Printer className="h-4 w-4" />
-              帳票を印刷
+              <ExternalLink className="h-4 w-4" />
+              帳票を新しいタブで表示
             </Button>
             
             <div className="text-sm text-gray-600">
               対象会員: {getReportMembers().length}名
             </div>
+          </div>
+          
+          <div className="text-sm text-gray-500 mt-2">
+            ※ 新しいタブで帳票が開きますので、そちらでブラウザの印刷機能をご利用ください
           </div>
         </CardContent>
       </Card>
@@ -644,68 +687,6 @@ export default function MembersPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* Print Content - Hidden on screen, visible when printing */}
-      {showPreview && (
-        <div className="print-content" style={{ display: 'none' }}>
-          <div className="print-title">
-            {reportTitle}
-          </div>
-          
-          {/* Single list or grouped by type - 2 columns */}
-          {(() => {
-            const allMembers = getReportMembers();
-            let globalIndex = 0;
-            
-            return selectedMemberTypes.map((memberType) => {
-              const typeMembers = allMembers.filter(m => m.member_type === memberType);
-              if (typeMembers.length === 0) return null;
-              
-              return (
-                <div key={memberType} className="print-section">
-                  {selectedMemberTypes.length > 1 && (
-                    <div className="print-section-title">
-                      {memberType} ({typeMembers.length}名)
-                    </div>
-                  )}
-                  
-                  <div className="print-members-grid">
-                    {typeMembers.map((member) => {
-                      globalIndex++;
-                      return (
-                        <div key={member.id} className="print-member-item">
-                          <div className="print-member-info">
-                            <span className="print-member-name">
-                              {globalIndex}. {member.name}
-                            </span>
-                            {selectedMemberTypes.length === 1 && (
-                              <span style={{ marginLeft: '10px', fontSize: '10px', color: '#666' }}>
-                                ({member.age}歳)
-                              </span>
-                            )}
-                          </div>
-                          <div className="print-checkbox"></div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            });
-          })()}
-          
-          {/* Summary */}
-          <div className="print-summary">
-            <div className="print-summary-title">
-              集計
-            </div>
-            <div>対象会員区分: {selectedMemberTypes.join(', ')}</div>
-            <div>総数: {getReportMembers().length}名</div>
-            <div>作成日: {format(new Date(), 'yyyy年MM月dd日')}</div>
-          </div>
-        </div>
-      )}
-      </div>
-    </>
+    </div>
   );
 }
