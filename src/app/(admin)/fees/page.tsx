@@ -301,6 +301,18 @@ export default function FeesPage() {
     }
   };
 
+  // Handle unpaid member click to auto-select in payment form
+  const handleUnpaidMemberClick = (member: MemberWithPaymentStatus) => {
+    paymentForm.setValue('member_id', member.id);
+    paymentForm.setValue('amount', member.expected_amount || 0);
+    
+    // Scroll to the payment form
+    const paymentFormElement = document.getElementById('payment-form');
+    if (paymentFormElement) {
+      paymentFormElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const getBadgeColor = (memberType: string) => {
     switch (memberType) {
       case '会員': return 'bg-green-100 text-green-800';
@@ -580,7 +592,7 @@ export default function FeesPage() {
                   未払い会員一覧
                 </CardTitle>
                 <CardDescription>
-                  会費の支払いが必要な会員の詳細情報
+                  会費の支払いが必要な会員の詳細情報（クリックで支払いフォームに追加）
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -597,7 +609,9 @@ export default function FeesPage() {
                             {unpaidMembers.map((member) => (
                               <div
                                 key={member.id}
-                                className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200"
+                                className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200 cursor-pointer hover:bg-red-100 transition-colors duration-200"
+                                onClick={() => handleUnpaidMemberClick(member)}
+                                title="クリックして支払いフォームに追加"
                               >
                                 <div className="flex items-center gap-3">
                                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -850,7 +864,7 @@ export default function FeesPage() {
             <CardContent className="space-y-6">
               {/* Fee Payment Form */}
               <Form {...paymentForm}>
-                <form onSubmit={paymentForm.handleSubmit(onSubmitFeePayment)} className="space-y-4">
+                <form id="payment-form" onSubmit={paymentForm.handleSubmit(onSubmitFeePayment)} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <FormField
                       control={paymentForm.control}
