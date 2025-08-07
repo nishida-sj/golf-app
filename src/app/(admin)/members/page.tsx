@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { Edit2, Check, X, UserPlus } from 'lucide-react';
+import { Edit2, Check, X, UserPlus, FileText, Printer } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,11 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Member>>({});
+  
+  // Check report states
+  const [reportTitle, setReportTitle] = useState('');
+  const [selectedMemberTypes, setSelectedMemberTypes] = useState<string[]>(['会員']);
+  const [showPreview, setShowPreview] = useState(false);
 
   const form = useForm<MemberFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -168,6 +173,38 @@ export default function MembersPage() {
     }
   };
 
+  // Handle member type selection for report
+  const toggleMemberType = (type: string) => {
+    setSelectedMemberTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
+  };
+
+  // Get filtered members for report
+  const getReportMembers = () => {
+    return members.filter(member => 
+      selectedMemberTypes.includes(member.member_type) && member.is_active
+    ).sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  // Generate and print report
+  const generateReport = () => {
+    if (!reportTitle.trim()) {
+      alert('帳票名を入力してください');
+      return;
+    }
+    if (selectedMemberTypes.length === 0) {
+      alert('対象会員区分を選択してください');
+      return;
+    }
+    setShowPreview(true);
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -177,11 +214,72 @@ export default function MembersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">会員管理</h1>
-        <p className="mt-2 text-gray-600">会員情報の登録・編集・管理を行います</p>
-      </div>
+    <>
+      {/* Print Styles */}
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print-content, .print-content * {
+            visibility: visible;
+          }
+          .print-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .no-print {
+            display: none !important;
+          }
+          @page {
+            size: A4;
+            margin: 20mm;
+          }
+          .print-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+          }
+          .print-member-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+          }
+          .print-member-name {
+            font-size: 16px;
+            font-weight: 500;
+          }
+          .print-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #000;
+            display: inline-block;
+          }
+          .print-section {
+            margin-bottom: 30px;
+          }
+          .print-section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+          }
+        }
+      `}</style>
+
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">会員管理</h1>
+          <p className="mt-2 text-gray-600">会員情報の登録・編集・管理を行います</p>
+        </div>
 
       {/* Create Form */}
       <Card>
@@ -274,6 +372,76 @@ export default function MembersPage() {
               </Button>
             </form>
           </Form>
+        </CardContent>
+      </Card>
+
+      {/* Check Report Form */}
+      <Card className="no-print">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            チェック帳票出力
+          </CardTitle>
+          <CardDescription>
+            会員ごとにチェックボックス付きの帳票を作成します
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Report Title */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                帳票名
+              </label>
+              <Input
+                value={reportTitle}
+                onChange={(e) => setReportTitle(e.target.value)}
+                placeholder="例: 出欠確認表"
+                className="w-full"
+              />
+            </div>
+
+            {/* Member Type Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                対象会員区分
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {MEMBER_TYPES.map((type) => (
+                  <label
+                    key={type}
+                    className="flex items-center space-x-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedMemberTypes.includes(type)}
+                      onChange={() => toggleMemberType(type)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className={`text-sm px-2 py-1 rounded ${getBadgeColor(type)}`}>
+                      {type}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Preview and Export Button */}
+          <div className="flex items-center gap-4 pt-4">
+            <Button
+              onClick={generateReport}
+              disabled={!reportTitle.trim() || selectedMemberTypes.length === 0}
+              className="flex items-center gap-2"
+            >
+              <Printer className="h-4 w-4" />
+              帳票を印刷
+            </Button>
+            
+            <div className="text-sm text-gray-600">
+              対象会員: {getReportMembers().length}名
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -427,6 +595,69 @@ export default function MembersPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+
+      {/* Print Content - Hidden on screen, visible when printing */}
+      {showPreview && (
+        <div className="print-content" style={{ display: 'none' }}>
+          <div className="print-title">
+            {reportTitle}
+          </div>
+          
+          {/* Group members by type if multiple types selected */}
+          {selectedMemberTypes.map((memberType) => {
+            const typeMembers = getReportMembers().filter(m => m.member_type === memberType);
+            if (typeMembers.length === 0) return null;
+            
+            return (
+              <div key={memberType} className="print-section">
+                {selectedMemberTypes.length > 1 && (
+                  <div className="print-section-title">
+                    {memberType} ({typeMembers.length}名)
+                  </div>
+                )}
+                
+                {typeMembers.map((member, index) => (
+                  <div key={member.id} className="print-member-item">
+                    <div className="print-member-info">
+                      <span className="print-member-name">
+                        {index + 1}. {member.name}
+                      </span>
+                      {selectedMemberTypes.length === 1 && (
+                        <span style={{ marginLeft: '20px', fontSize: '12px', color: '#666' }}>
+                          ({member.age}歳)
+                        </span>
+                      )}
+                    </div>
+                    <div className="print-checkbox"></div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+          
+          {/* Summary */}
+          <div style={{ 
+            marginTop: '30px', 
+            padding: '15px', 
+            border: '1px solid #000', 
+            backgroundColor: '#f9f9f9' 
+          }}>
+            <div style={{ fontSize: '14px', marginBottom: '10px' }}>
+              <strong>集計</strong>
+            </div>
+            <div style={{ fontSize: '12px' }}>
+              対象会員区分: {selectedMemberTypes.join(', ')}
+            </div>
+            <div style={{ fontSize: '12px' }}>
+              総数: {getReportMembers().length}名
+            </div>
+            <div style={{ fontSize: '12px' }}>
+              作成日: {format(new Date(), 'yyyy年MM月dd日')}
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
+    </>
   );
 }
