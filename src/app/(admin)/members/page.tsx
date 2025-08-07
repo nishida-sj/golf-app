@@ -202,7 +202,9 @@ export default function MembersPage() {
     setShowPreview(true);
     setTimeout(() => {
       window.print();
-    }, 500);
+      // Reset preview after printing
+      setTimeout(() => setShowPreview(false), 1000);
+    }, 100);
   };
 
   if (loading) {
@@ -218,59 +220,94 @@ export default function MembersPage() {
       {/* Print Styles */}
       <style jsx global>{`
         @media print {
-          body * {
-            visibility: hidden;
+          * {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          .print-content, .print-content * {
-            visibility: visible;
+          
+          body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
           }
-          .print-content {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
+          
           .no-print {
             display: none !important;
           }
+          
+          .print-content {
+            display: block !important;
+            visibility: visible !important;
+            position: static !important;
+            width: 100% !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          
           @page {
             size: A4;
-            margin: 20mm;
+            margin: 15mm;
           }
+          
           .print-title {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-bottom: 2px solid #000;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
+            page-break-after: avoid;
           }
+          
+          .print-section {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+          }
+          
+          .print-section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background-color: #f0f0f0;
+            padding: 4px 8px;
+            page-break-after: avoid;
+          }
+          
           .print-member-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
+            padding: 3px 0;
             border-bottom: 1px solid #ddd;
+            page-break-inside: avoid;
           }
+          
           .print-member-name {
-            font-size: 16px;
-            font-weight: 500;
+            font-size: 14px;
+            font-weight: 400;
           }
+          
           .print-checkbox {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border: 2px solid #000;
             display: inline-block;
+            flex-shrink: 0;
           }
-          .print-section {
-            margin-bottom: 30px;
+          
+          .print-summary {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #000;
+            background-color: #f9f9f9;
+            font-size: 11px;
+            page-break-inside: avoid;
           }
-          .print-section-title {
-            font-size: 18px;
+          
+          .print-summary-title {
+            font-size: 12px;
             font-weight: bold;
-            margin-bottom: 15px;
-            background-color: #f0f0f0;
-            padding: 5px 10px;
+            margin-bottom: 5px;
           }
         }
       `}</style>
@@ -603,57 +640,54 @@ export default function MembersPage() {
             {reportTitle}
           </div>
           
-          {/* Group members by type if multiple types selected */}
-          {selectedMemberTypes.map((memberType) => {
-            const typeMembers = getReportMembers().filter(m => m.member_type === memberType);
-            if (typeMembers.length === 0) return null;
+          {/* Single list or grouped by type */}
+          {(() => {
+            const allMembers = getReportMembers();
+            let globalIndex = 0;
             
-            return (
-              <div key={memberType} className="print-section">
-                {selectedMemberTypes.length > 1 && (
-                  <div className="print-section-title">
-                    {memberType} ({typeMembers.length}名)
-                  </div>
-                )}
-                
-                {typeMembers.map((member, index) => (
-                  <div key={member.id} className="print-member-item">
-                    <div className="print-member-info">
-                      <span className="print-member-name">
-                        {index + 1}. {member.name}
-                      </span>
-                      {selectedMemberTypes.length === 1 && (
-                        <span style={{ marginLeft: '20px', fontSize: '12px', color: '#666' }}>
-                          ({member.age}歳)
-                        </span>
-                      )}
+            return selectedMemberTypes.map((memberType) => {
+              const typeMembers = allMembers.filter(m => m.member_type === memberType);
+              if (typeMembers.length === 0) return null;
+              
+              return (
+                <div key={memberType} className="print-section">
+                  {selectedMemberTypes.length > 1 && (
+                    <div className="print-section-title">
+                      {memberType} ({typeMembers.length}名)
                     </div>
-                    <div className="print-checkbox"></div>
-                  </div>
-                ))}
-              </div>
-            );
-          })}
+                  )}
+                  
+                  {typeMembers.map((member) => {
+                    globalIndex++;
+                    return (
+                      <div key={member.id} className="print-member-item">
+                        <div className="print-member-info">
+                          <span className="print-member-name">
+                            {globalIndex}. {member.name}
+                          </span>
+                          {selectedMemberTypes.length === 1 && (
+                            <span style={{ marginLeft: '15px', fontSize: '11px', color: '#666' }}>
+                              ({member.age}歳)
+                            </span>
+                          )}
+                        </div>
+                        <div className="print-checkbox"></div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            });
+          })()}
           
           {/* Summary */}
-          <div style={{ 
-            marginTop: '30px', 
-            padding: '15px', 
-            border: '1px solid #000', 
-            backgroundColor: '#f9f9f9' 
-          }}>
-            <div style={{ fontSize: '14px', marginBottom: '10px' }}>
-              <strong>集計</strong>
+          <div className="print-summary">
+            <div className="print-summary-title">
+              集計
             </div>
-            <div style={{ fontSize: '12px' }}>
-              対象会員区分: {selectedMemberTypes.join(', ')}
-            </div>
-            <div style={{ fontSize: '12px' }}>
-              総数: {getReportMembers().length}名
-            </div>
-            <div style={{ fontSize: '12px' }}>
-              作成日: {format(new Date(), 'yyyy年MM月dd日')}
-            </div>
+            <div>対象会員区分: {selectedMemberTypes.join(', ')}</div>
+            <div>総数: {getReportMembers().length}名</div>
+            <div>作成日: {format(new Date(), 'yyyy年MM月dd日')}</div>
           </div>
         </div>
       )}
