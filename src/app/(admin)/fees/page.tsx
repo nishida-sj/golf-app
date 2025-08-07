@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { DollarSign, Users, Calendar, Edit2, Check, X, Plus } from 'lucide-react';
+import { DollarSign, Users, Calendar, Edit2, Check, X, Plus, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -311,6 +311,25 @@ export default function FeesPage() {
     }
   };
 
+  // Calculate payment statistics
+  const getPaymentStats = () => {
+    const paidMembers = memberPayments.filter(m => m.payment_status === 'paid');
+    const unpaidMembers = memberPayments.filter(m => m.payment_status === 'unpaid');
+    const totalMembers = memberPayments.length;
+    const paidAmount = paidMembers.reduce((sum, m) => sum + (m.fee_payment?.amount || 0), 0);
+    const expectedAmount = memberPayments.reduce((sum, m) => sum + (m.expected_amount || 0), 0);
+    const paymentRate = totalMembers > 0 ? (paidMembers.length / totalMembers) * 100 : 0;
+    
+    return {
+      paidCount: paidMembers.length,
+      unpaidCount: unpaidMembers.length,
+      totalCount: totalMembers,
+      paidAmount,
+      expectedAmount,
+      paymentRate
+    };
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -352,6 +371,112 @@ export default function FeesPage() {
 
       {selectedYearId && (
         <>
+          {/* Payment Overview Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                支払い状況概要
+              </CardTitle>
+              <CardDescription>選択した年度の会費支払い状況の概要です</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                const stats = getPaymentStats();
+                return (
+                  <div className="space-y-6">
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <Card className="border-green-200 bg-green-50">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="h-8 w-8 text-green-600" />
+                            <div>
+                              <div className="text-2xl font-bold text-green-700">{stats.paidCount}</div>
+                              <div className="text-sm text-green-600">支払い済み</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="border-red-200 bg-red-50">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <XCircle className="h-8 w-8 text-red-600" />
+                            <div>
+                              <div className="text-2xl font-bold text-red-700">{stats.unpaidCount}</div>
+                              <div className="text-sm text-red-600">未払い</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="border-blue-200 bg-blue-50">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Users className="h-8 w-8 text-blue-600" />
+                            <div>
+                              <div className="text-2xl font-bold text-blue-700">{stats.totalCount}</div>
+                              <div className="text-sm text-blue-600">総会員数</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="border-gray-200 bg-gray-50">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <DollarSign className="h-8 w-8 text-gray-600" />
+                            <div>
+                              <div className="text-2xl font-bold text-gray-700">{stats.paymentRate.toFixed(1)}%</div>
+                              <div className="text-sm text-gray-600">徴収率</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span>支払い進捗</span>
+                        <span>{stats.paidCount}/{stats.totalCount} 人</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-green-600 h-3 rounded-full transition-all duration-300 ease-out"
+                          style={{ width: `${stats.paymentRate}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Amount Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-green-600">
+                          ¥{stats.paidAmount.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-600">徴収済み額</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-gray-600">
+                          ¥{stats.expectedAmount.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-600">予定総額</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-orange-600">
+                          ¥{(stats.expectedAmount - stats.paidAmount).toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-600">未収額</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+
           {/* Fee Settings Section */}
           <Card>
             <CardHeader>
