@@ -226,18 +226,22 @@ export default function MembersPage() {
             print-color-adjust: exact !important;
           }
           
+          body * {
+            visibility: hidden;
+          }
+          
           body {
             font-family: 'Helvetica', 'Arial', sans-serif;
           }
           
-          .no-print {
-            display: none !important;
+          .print-content, .print-content * {
+            visibility: visible !important;
           }
           
           .print-content {
-            display: block !important;
-            visibility: visible !important;
-            position: static !important;
+            position: absolute;
+            left: 0;
+            top: 0;
             width: 100% !important;
             height: auto !important;
             margin: 0 !important;
@@ -273,6 +277,13 @@ export default function MembersPage() {
             page-break-after: avoid;
           }
           
+          .print-members-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            column-gap: 20px;
+          }
+          
           .print-member-item {
             display: flex;
             justify-content: space-between;
@@ -280,6 +291,7 @@ export default function MembersPage() {
             padding: 3px 0;
             border-bottom: 1px solid #ddd;
             page-break-inside: avoid;
+            width: 100%;
           }
           
           .print-member-name {
@@ -640,7 +652,7 @@ export default function MembersPage() {
             {reportTitle}
           </div>
           
-          {/* Single list or grouped by type */}
+          {/* Single list or grouped by type - 2 columns */}
           {(() => {
             const allMembers = getReportMembers();
             let globalIndex = 0;
@@ -657,24 +669,26 @@ export default function MembersPage() {
                     </div>
                   )}
                   
-                  {typeMembers.map((member) => {
-                    globalIndex++;
-                    return (
-                      <div key={member.id} className="print-member-item">
-                        <div className="print-member-info">
-                          <span className="print-member-name">
-                            {globalIndex}. {member.name}
-                          </span>
-                          {selectedMemberTypes.length === 1 && (
-                            <span style={{ marginLeft: '15px', fontSize: '11px', color: '#666' }}>
-                              ({member.age}歳)
+                  <div className="print-members-grid">
+                    {typeMembers.map((member) => {
+                      globalIndex++;
+                      return (
+                        <div key={member.id} className="print-member-item">
+                          <div className="print-member-info">
+                            <span className="print-member-name">
+                              {globalIndex}. {member.name}
                             </span>
-                          )}
+                            {selectedMemberTypes.length === 1 && (
+                              <span style={{ marginLeft: '10px', fontSize: '10px', color: '#666' }}>
+                                ({member.age}歳)
+                              </span>
+                            )}
+                          </div>
+                          <div className="print-checkbox"></div>
                         </div>
-                        <div className="print-checkbox"></div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               );
             });
