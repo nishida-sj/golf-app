@@ -161,18 +161,45 @@ export default function CompetitionsPage() {
   // Create or update competition
   const onSubmit = async (data: CompetitionFormData) => {
     try {
-      // Clean up celebration fields if not enabled
-      if (!data.has_celebration) {
-        data.celebration_venue = '';
-        data.celebration_start_time = '';
-        data.celebration_fee = 0;
+      // Prepare data for submission
+      const submitData: Record<string, unknown> = {
+        year_id: data.year_id,
+        name: data.name,
+        golf_course: data.golf_course,
+        start_time: data.start_time,
+        title: data.title,
+        rules: data.rules,
+        fee: data.fee,
+        custom_field_1: data.custom_field_1 || null,
+        custom_field_2: data.custom_field_2 || null,
+        custom_field_3: data.custom_field_3 || null,
+        has_celebration: data.has_celebration,
+      };
+
+      // Add celebration fields only if enabled and have values
+      if (data.has_celebration && data.celebration_venue) {
+        submitData.celebration_venue = data.celebration_venue;
+      } else {
+        submitData.celebration_venue = null;
+      }
+
+      if (data.has_celebration && data.celebration_start_time) {
+        submitData.celebration_start_time = data.celebration_start_time;
+      } else {
+        submitData.celebration_start_time = null;
+      }
+
+      if (data.has_celebration && data.celebration_fee) {
+        submitData.celebration_fee = data.celebration_fee;
+      } else {
+        submitData.celebration_fee = null;
       }
 
       if (isEditing && editingId) {
         // Update existing competition
         const { error } = await supabase
           .from(DB_TABLES.COMPETITIONS)
-          .update(data)
+          .update(submitData)
           .eq('id', editingId);
 
         if (error) throw error;
@@ -180,7 +207,7 @@ export default function CompetitionsPage() {
         // Create new competition
         const { error } = await supabase
           .from(DB_TABLES.COMPETITIONS)
-          .insert([data]);
+          .insert([submitData]);
 
         if (error) throw error;
       }
