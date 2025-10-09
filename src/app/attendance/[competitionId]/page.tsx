@@ -477,62 +477,8 @@ export default function AttendancePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>氏名</TableHead>
-                    <TableHead>区分</TableHead>
-                    <TableHead>ゴルフ</TableHead>
-                    {competition.has_celebration && <TableHead>祝賀会</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {members.map((memberData) => {
-                    const golfDisplay = getAttendanceDisplay(memberData.attendance?.golf_attendance);
-                    const celebrationDisplay = getAttendanceDisplay(memberData.attendance?.celebration_attendance);
-                    
-                    return (
-                      <TableRow key={memberData.member.id}>
-                        <TableCell className="font-medium">
-                          {memberData.member.name}
-                        </TableCell>
-                        <TableCell>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBadgeColor(memberData.member.member_type)}`}>
-                            {memberData.member.member_type}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <span className={golfDisplay.color}>{golfDisplay.icon}</span>
-                            <span className="text-sm">{golfDisplay.label}</span>
-                          </div>
-                          {memberData.attendance?.golf_comment && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              {memberData.attendance.golf_comment}
-                            </div>
-                          )}
-                        </TableCell>
-                        {competition.has_celebration && (
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <span className={celebrationDisplay.color}>{celebrationDisplay.icon}</span>
-                              <span className="text-sm">{celebrationDisplay.label}</span>
-                            </div>
-                            {memberData.attendance?.celebration_comment && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                {memberData.attendance.celebration_comment}
-                              </div>
-                            )}
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-
               {/* Attendance Summary */}
-              <div className="mt-6 space-y-4">
+              <div className="mb-6 space-y-4">
                 {/* Golf Attendance Summary */}
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium mb-3 flex items-center gap-2">
@@ -587,6 +533,60 @@ export default function AttendancePage() {
                   </div>
                 )}
               </div>
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>氏名</TableHead>
+                    <TableHead>区分</TableHead>
+                    <TableHead>ゴルフ</TableHead>
+                    {competition.has_celebration && <TableHead>祝賀会</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {members.map((memberData) => {
+                    const golfDisplay = getAttendanceDisplay(memberData.attendance?.golf_attendance);
+                    const celebrationDisplay = getAttendanceDisplay(memberData.attendance?.celebration_attendance);
+                    
+                    return (
+                      <TableRow key={memberData.member.id}>
+                        <TableCell className="font-medium">
+                          {memberData.member.name}
+                        </TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBadgeColor(memberData.member.member_type)}`}>
+                            {memberData.member.member_type}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className={golfDisplay.color}>{golfDisplay.icon}</span>
+                            <span className="text-sm">{golfDisplay.label}</span>
+                          </div>
+                          {memberData.attendance?.golf_comment && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {memberData.attendance.golf_comment}
+                            </div>
+                          )}
+                        </TableCell>
+                        {competition.has_celebration && (
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className={celebrationDisplay.color}>{celebrationDisplay.icon}</span>
+                              <span className="text-sm">{celebrationDisplay.label}</span>
+                            </div>
+                            {memberData.attendance?.celebration_comment && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                {memberData.attendance.celebration_comment}
+                              </div>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </div>
