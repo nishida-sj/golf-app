@@ -50,12 +50,14 @@ const ATTENDANCE_OPTIONS: { value: AttendanceStatus; label: string; icon: React.
 export default function AttendancePage() {
   const params = useParams();
   const competitionId = params.competitionId as string;
-  
+
   const [competition, setCompetition] = useState<CompetitionWithAttendances | null>(null);
   const [members, setMembers] = useState<MemberAttendanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [selectedMember, setSelectedMember] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const form = useForm<AttendanceFormData>({
     resolver: zodResolver(attendanceFormSchema),
@@ -153,6 +155,9 @@ export default function AttendancePage() {
   // Submit attendance
   const onSubmit = async (data: AttendanceFormData) => {
     setSubmitting(true);
+    setSuccessMessage('');
+    setErrorMessage('');
+
     try {
       const { error } = await supabase
         .from(DB_TABLES.COMPETITION_ATTENDANCES)
@@ -160,9 +165,12 @@ export default function AttendancePage() {
 
       if (error) throw error;
 
+      // Show success message
+      setSuccessMessage('出欠情報を登録しました');
+
       // Refresh data
       await fetchCompetitionData();
-      
+
       // Reset form
       form.reset({
         competition_id: competitionId,
@@ -174,8 +182,19 @@ export default function AttendancePage() {
       });
       setSelectedMember('');
 
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+
     } catch (error) {
       console.error('Error submitting attendance:', error);
+      setErrorMessage('出欠情報の登録に失敗しました。もう一度お試しください。');
+
+      // Clear error message after 5 seconds
+      setTimeout(() => {
+        setErrorMessage('');
+      }, 5000);
     } finally {
       setSubmitting(false);
     }
@@ -328,6 +347,26 @@ export default function AttendancePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Success Message */}
+              {successMessage && (
+                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-800">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="font-medium">{successMessage}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {errorMessage && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-red-800">
+                    <XCircle className="h-5 w-5" />
+                    <span className="font-medium">{errorMessage}</span>
+                  </div>
+                </div>
+              )}
+
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
