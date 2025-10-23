@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { Trophy, Calendar, MapPin, Clock, Edit2, Trash2, Plus, ExternalLink, Copy, UsersRound } from 'lucide-react';
+import { Trophy, Calendar, MapPin, Clock, Edit2, Trash2, Plus, ExternalLink, Copy, UsersRound, Download } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,7 @@ import {
 
 import { supabase, DB_TABLES } from '@/lib/supabase';
 import { competitionFormSchema } from '@/lib/validations';
+import { convertToCSV, downloadCSV } from '@/lib/csv';
 import { Year } from '@/types/database';
 import { Competition, CompetitionFormData } from '@/types/competition';
 import Link from 'next/link';
@@ -286,6 +287,26 @@ export default function CompetitionsPage() {
   const openAttendancePage = (competitionId: string) => {
     const url = `${window.location.origin}/attendance/${competitionId}`;
     window.open(url, '_blank');
+  };
+
+  // Export participant data as CSV
+  const exportParticipantData = async (competition: Competition) => {
+    try {
+      const response = await fetch(`/api/competitions/${competition.id}/export`);
+
+      if (!response.ok) {
+        throw new Error('データの取得に失敗しました');
+      }
+
+      const data = await response.json();
+      const csvContent = convertToCSV(data.participants, data.has_celebration);
+      const filename = `${competition.name}_参加者データ_${format(new Date(), 'yyyyMMdd')}.csv`;
+
+      downloadCSV(csvContent, filename);
+    } catch (error) {
+      console.error('Error exporting participant data:', error);
+      alert('参加者データの出力に失敗しました');
+    }
   };
 
   if (loading) {
@@ -673,6 +694,14 @@ export default function CompetitionsPage() {
                               <UsersRound className="h-4 w-4" />
                             </Button>
                           </Link>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => exportParticipantData(competition)}
+                            title="参加者データ出力"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
