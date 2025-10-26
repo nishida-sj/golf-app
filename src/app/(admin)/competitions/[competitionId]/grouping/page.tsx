@@ -607,20 +607,17 @@ export default function CompetitionGroupingPage() {
                             <SelectItem value="__EMPTY__">選択解除</SelectItem>
                             {availableMembers
                               .filter(m => !field.value.includes(m.id) || field.value[position] === m.id)
-                              .map((member) => (
-                                <SelectItem key={member.id} value={member.id}>
-                                  <div className="flex items-center gap-2">
-                                    {getAttendanceIcon(member.attendance_status)}
-                                    <span>{member.name}</span>
-                                    <span className={`px-1.5 py-0.5 rounded text-xs ${getBadgeColor(member.member_type)}`}>
-                                      {member.member_type}
-                                    </span>
-                                    {member.is_assigned && !editingId && (
-                                      <span className="text-xs text-orange-600">(済)</span>
-                                    )}
-                                  </div>
-                                </SelectItem>
-                              ))}
+                              .map((member) => {
+                                const statusSymbol = member.attendance_status === '〇' ? '〇' :
+                                                    member.attendance_status === '×' ? '×' :
+                                                    member.attendance_status === '△' ? '△' : '-';
+                                const assignedMark = member.is_assigned && !editingId ? ' (済)' : '';
+                                return (
+                                  <SelectItem key={member.id} value={member.id}>
+                                    {statusSymbol} {member.name} [{member.member_type}]{assignedMark}
+                                  </SelectItem>
+                                );
+                              })}
                           </SelectContent>
                         </Select>
                       ))}
