@@ -61,6 +61,7 @@ export default function AttendancePage() {
   const [memberSearchQuery, setMemberSearchQuery] = useState<string>('');
   const [isMemberDropdownOpen, setIsMemberDropdownOpen] = useState(false);
   const memberDropdownRef = useRef<HTMLDivElement>(null);
+  const memberSearchInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<AttendanceFormData>({
     resolver: zodResolver(attendanceFormSchema),
@@ -142,14 +143,27 @@ export default function AttendancePage() {
 
   // Close member dropdown on outside click
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (memberDropdownRef.current && !memberDropdownRef.current.contains(event.target as Node)) {
         setIsMemberDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isMemberDropdownOpen) {
+      setTimeout(() => {
+        memberSearchInputRef.current?.focus();
+      }, 50);
+    }
+  }, [isMemberDropdownOpen]);
 
   // Filter members by search query
   const filteredMembers = useMemo(() => {
@@ -418,15 +432,22 @@ export default function AttendancePage() {
                           </div>
                           {isMemberDropdownOpen && (
                             <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md">
-                              <div className="flex items-center border-b px-3 py-2">
+                              <div
+                                className="flex items-center border-b px-3 py-2"
+                                onClick={(e) => e.stopPropagation()}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onTouchStart={(e) => e.stopPropagation()}
+                              >
                                 <Search className="h-4 w-4 text-muted-foreground mr-2 shrink-0" />
                                 <input
+                                  ref={memberSearchInputRef}
                                   type="text"
+                                  inputMode="text"
                                   className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                                   placeholder="名前で検索..."
                                   value={memberSearchQuery}
                                   onChange={(e) => setMemberSearchQuery(e.target.value)}
-                                  autoFocus
+                                  onFocus={(e) => e.target.select()}
                                 />
                               </div>
                               <div className="max-h-60 overflow-y-auto p-1">
