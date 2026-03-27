@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { 
-  Trophy, MapPin, Clock, Users, MessageSquare, 
-  CheckCircle, XCircle, AlertCircle, CalendarDays 
+import {
+  Trophy, MapPin, Clock, Users, MessageSquare,
+  CheckCircle, XCircle, AlertCircle, CalendarDays, Search, ChevronDown
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,6 +58,9 @@ export default function AttendancePage() {
   const [selectedMember, setSelectedMember] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [memberSearchQuery, setMemberSearchQuery] = useState<string>('');
+  const [isMemberDropdownOpen, setIsMemberDropdownOpen] = useState(false);
+  const memberDropdownRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<AttendanceFormData>({
     resolver: zodResolver(attendanceFormSchema),
@@ -137,6 +140,27 @@ export default function AttendancePage() {
     }
   }, [competitionId, fetchCompetitionData]);
 
+  // Close member dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (memberDropdownRef.current && !memberDropdownRef.current.contains(event.target as Node)) {
+        setIsMemberDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter members by search query
+  const filteredMembers = useMemo(() => {
+    if (!memberSearchQuery) return members;
+    const query = memberSearchQuery.toLowerCase();
+    return members.filter(m =>
+      m.member.name.toLowerCase().includes(query) ||
+      m.member.member_type.toLowerCase().includes(query)
+    );
+  }, [members, memberSearchQuery]);
+
   // Handle member selection
   const handleMemberSelect = (memberId: string) => {
     setSelectedMember(memberId);
@@ -181,6 +205,8 @@ export default function AttendancePage() {
         celebration_comment: '',
       });
       setSelectedMember('');
+      setMemberSearchQuery('');
+      setIsMemberDropdownOpen(false);
 
       // Clear success message after 3 seconds
       setTimeout(() => {
@@ -375,20 +401,63 @@ export default function AttendancePage() {
                     render={() => (
                       <FormItem>
                         <FormLabel>お名前</FormLabel>
-                        <Select onValueChange={handleMemberSelect} value={selectedMember}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="お名前を選択してください" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {members.map((member) => (
-                              <SelectItem key={member.member.id} value={member.member.id}>
-                                {member.member.name} ({member.member.member_type})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="relative" ref={memberDropdownRef}>
+                          <div
+                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background cursor-pointer"
+                            onClick={() => setIsMemberDropdownOpen(!isMemberDropdownOpen)}
+                          >
+                            <span className={selectedMember ? '' : 'text-muted-foreground'}>
+                              {selectedMember
+                                ? (() => {
+                                    const m = members.find(m => m.member.id === selectedMember);
+                                    return m ? `${m.member.name} (${m.member.member_type})` : '';
+                                  })()
+                                : 'お名前を選択してください'}
+                            </span>
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </div>
+                          {isMemberDropdownOpen && (
+                            <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md">
+                              <div className="flex items-center border-b px-3 py-2">
+                                <Search className="h-4 w-4 text-muted-foreground mr-2 shrink-0" />
+                                <input
+                                  type="text"
+                                  className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                  placeholder="名前で検索..."
+                                  value={memberSearchQuery}
+                                  onChange={(e) => setMemberSearchQuery(e.target.value)}
+                                  autoFocus
+                                />
+                              </div>
+                              <div className="max-h-60 overflow-y-auto p-1">
+                                {filteredMembers.length === 0 ? (
+                                  <div className="py-3 text-center text-sm text-muted-foreground">
+                                    該当する会員が見つかりません
+                                  </div>
+                                ) : (
+                                  filteredMembers.map((member) => (
+                                    <div
+                                      key={member.member.id}
+                                      className={`relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground ${
+                                        selectedMember === member.member.id ? 'bg-accent' : ''
+                                      }`}
+                                      onClick={() => {
+                                        handleMemberSelect(member.member.id);
+                                        setIsMemberDropdownOpen(false);
+                                        setMemberSearchQuery('');
+                                      }}
+                                    >
+                                      {member.member.name}
+                                      <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getBadgeColor(member.member.member_type)}`}>
+                                        {member.member.member_type}
+                                      </span>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
