@@ -387,7 +387,7 @@ export default function AttendancePage() {
                     render={() => (
                       <FormItem>
                         <FormLabel>お名前</FormLabel>
-                        <div className="relative mb-2">
+                        <div className="relative mb-1">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <input
                             type="text"
@@ -397,6 +397,7 @@ export default function AttendancePage() {
                             onChange={(e) => setMemberSearchQuery(e.target.value)}
                           />
                         </div>
+                        <p className="text-xs text-muted-foreground mb-2">名前を入力して絞り込み、下のプルダウンから選択してください</p>
                         <Select onValueChange={handleMemberSelect} value={selectedMember}>
                           <FormControl>
                             <SelectTrigger>
